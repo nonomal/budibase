@@ -63,6 +63,10 @@ export interface UserCtx<
   ResponseBody = any,
   Params extends Record<string, any> = any,
 > extends Ctx<RequestBody, ResponseBody, Params> {
+  /**
+   * @deprecated: Use context.getUser() instead
+   * Authenticated context.
+   */
   user: ContextUser
   state: { nonce?: string }
   roleId?: string

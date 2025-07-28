@@ -112,10 +112,10 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = tableId.includes("datasource_plus")
-    ? await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+    ? await sdk.rows.save(sourceId, ctx.request.body, context.getUserId())
     : await quotas.addAction(async () => {
         const response = await quotas.addRow(() =>
-          sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+          sdk.rows.save(sourceId, ctx.request.body, context.getUserId())
         )
         events.action.crudExecuted({ type: "create" })
         return response
