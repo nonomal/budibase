@@ -209,5 +209,25 @@ describe("Current app middleware", () => {
       })
       await checkExpected()
     })
+
+    it("should set user in context when user is logged in", async () => {
+      mockAuthWithCookie()
+      config.setUser()
+
+      let capturedUser: any
+      const originalNext = config.next
+      config.next = jest.fn().mockImplementation(async () => {
+        const { context } = jest.requireActual("@budibase/backend-core")
+        capturedUser = context.getUser()
+        return originalNext()
+      })
+
+      await config.executeMiddleware()
+
+      expect(capturedUser).toBeDefined()
+      expect(capturedUser._id).toEqual("ro_ta_users_us_uuid1")
+      expect(capturedUser.roleId).toEqual("PUBLIC")
+      expect(config.next).toHaveBeenCalled()
+    })
   })
 })

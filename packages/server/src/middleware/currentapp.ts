@@ -117,6 +117,8 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
       role: await roles.getRole(roleId, { defaultPublic: true }),
     }
 
-    return context.doInAppContext({ appId, user: ctx.user }, () => next())
+    return context.doInAppContext({ appId, user: ctx.user }, () => {
+      return next()
+    })
   })
 }) as Middleware
