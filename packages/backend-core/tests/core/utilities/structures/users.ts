@@ -1,22 +1,23 @@
+import { docIds } from "@budibase/backend-core"
 import {
-  AdminUser,
   AdminOnlyUser,
+  AdminUser,
   BuilderUser,
   SSOAuthDetails,
   SSOUser,
   User,
 } from "@budibase/types"
-import { authDetails } from "./sso"
+import { tenant } from "."
 import { uuid } from "./common"
 import { generator } from "./generator"
-import { tenant } from "."
+import { authDetails } from "./sso"
 
 export const newEmail = () => {
   return `${uuid()}@example.com`
 }
 
 export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
-  const userId = userProps?._id
+  const userId = userProps?._id || docIds.generateGlobalUserID()
   return {
     _id: userId,
     userId,

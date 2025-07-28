@@ -1,11 +1,11 @@
-import { testEnv } from "../../../tests/extra"
+import { IdentityType, User } from "@budibase/types"
 import * as context from "../"
-import { DEFAULT_TENANT_ID } from "../../constants"
 import { structures } from "../../../tests"
+import { testEnv } from "../../../tests/extra"
+import { DEFAULT_TENANT_ID } from "../../constants"
 import * as db from "../../db"
 import Context from "../Context"
 import { ContextMap } from "../types"
-import { IdentityType } from "@budibase/types"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -251,5 +251,133 @@ describe("context", () => {
         )
       }
     )
+  })
+
+  describe("user context functions", () => {
+    let mockUser: User
+
+    beforeEach(() => {
+      testEnv.multiTenant()
+      mockUser = structures.users.user()
+    })
+
+    describe("getUser", () => {
+      it("returns undefined when no user is set", () => {
+        const user = context.getUser()
+        expect(user).toBeUndefined()
+      })
+
+      it("returns undefined outside of context", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext({ appId, user: mockUser }, () => {
+          expect(context.getUser()).toEqual(mockUser)
+        })
+
+        expect(context.getUser()).toBeUndefined()
+      })
+    })
+
+    describe("getUserId", () => {
+      it("returns undefined when no user is set", () => {
+        const userId = context.getUserId()
+        expect(userId).toBeUndefined()
+      })
+
+      it("returns userId when user is set", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext({ appId, user: mockUser }, () => {
+          expect(context.getUserId()).toBe(mockUser._id)
+        })
+
+        expect(context.getUserId()).toBeUndefined()
+      })
+
+      it("throws error when throwIfUnauthenticated is true and no user", () => {
+        expect(() => context.getUserId(true)).toThrow("User not authenticated")
+      })
+
+      it("returns user ID when throwIfUnauthenticated is true and user exists", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext({ appId, user: mockUser }, () => {
+          const userId = context.getUserId(true)
+          expect(userId).toBe(mockUser._id)
+        })
+      })
+    })
+
+    describe("isAuthenticated", () => {
+      it("returns false when no user is set", () => {
+        const isAuth = context.isAuthenticated()
+        expect(isAuth).toBe(false)
+      })
+
+      it("returns false outside of context", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext({ appId, user: mockUser }, () => {
+          expect(context.isAuthenticated()).toBe(true)
+        })
+
+        expect(context.isAuthenticated()).toBe(false)
+      })
+    })
+
+    describe("doInAppContext with user", () => {
+      it("sets both app ID and user in context", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext({ appId, user: mockUser }, () => {
+          expect(context.getAppId()).toBe(appId)
+          expect(context.getUser()).toEqual(mockUser)
+        })
+
+        expect(context.getAppId()).toBeUndefined()
+        expect(context.getUser()).toBeUndefined()
+      })
+
+      it("supports nested contexts without setting the user", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext({ appId, user: mockUser }, async () => {
+          expect(context.getUser()).toEqual(mockUser)
+
+          await context.doInAppContext(appId, () => {
+            expect(context.getUser()).toEqual(mockUser)
+          })
+
+          expect(context.getUser()).toEqual(mockUser)
+        })
+      })
+
+      it("supports nested contexts with different users", async () => {
+        const appId = db.generateAppID()
+        const secondUser = structures.users.user()
+
+        await context.doInAppContext({ appId, user: mockUser }, async () => {
+          expect(context.getUser()).toEqual(mockUser)
+
+          await context.doInAppContext({ appId, user: secondUser }, () => {
+            expect(context.getUser()).toEqual(secondUser)
+          })
+
+          expect(context.getUser()).toEqual(mockUser)
+        })
+      })
+
+      it("maintains backward compatibility with string appId parameter", async () => {
+        const appId = db.generateAppID()
+
+        await context.doInAppContext(appId, () => {
+          const contextAppId = context.getAppId()
+          const contextUser = context.getUser()
+
+          expect(contextAppId).toBe(appId)
+          expect(contextUser).toBeUndefined()
+        })
+      })
+    })
   })
 })
