@@ -20,6 +20,7 @@ import {
   ContextUser,
 } from "@budibase/types"
 import { ContextMap } from "./types"
+import { HTTPError } from "../errors"
 
 let TEST_APP_ID: string | null = null
 
@@ -313,6 +314,28 @@ export function getAppId(): string | undefined {
   } else {
     return foundId
   }
+}
+
+export function isAuthenticated(): boolean {
+  const context = Context.get()
+  return !!context?.user
+}
+
+export function getUser(): ContextUser | undefined {
+  const context = Context.get()
+  const found = context?.user
+  return found
+}
+
+export function getUserId(): string | undefined
+export function getUserId(throwIfUnauthenticated: true): string
+export function getUserId(throwIfUnauthenticated?: true): string | undefined {
+  const context = Context.get()
+  const user = context?.user
+  if (!user && throwIfUnauthenticated) {
+    throw new HTTPError("User not authenticated", 401)
+  }
+  return user?._id
 }
 
 export function getIP(): string | undefined {
