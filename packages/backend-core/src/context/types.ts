@@ -1,9 +1,17 @@
-import { IdentityContext, License, Snippet, Table, VM } from "@budibase/types"
+import {
+  ContextUser,
+  IdentityContext,
+  License,
+  Snippet,
+  Table,
+  VM,
+} from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 
 // keep this out of Budibase types, don't want to expose context info
 export type ContextMap = {
+  user?: ContextUser
   tenantId?: string
   isSelfHostUsingCloud?: boolean
   license?: License

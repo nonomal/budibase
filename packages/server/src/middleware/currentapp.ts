@@ -101,20 +101,22 @@ export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
 
   return context.doInAppContext(appId, async () => {
     ctx.appId = appId
-    if (roleId) {
-      ctx.roleId = roleId
-      const globalId = ctx.user ? ctx.user._id : undefined
-      ctx.user = {
-        ...ctx.user!,
-        // override userID with metadata one
-        _id: userId,
-        userId,
-        globalId,
-        roleId,
-        role: await roles.getRole(roleId, { defaultPublic: true }),
-      }
+    if (!roleId) {
+      return next()
     }
 
-    return next()
+    ctx.roleId = roleId
+    const globalId = ctx.user ? ctx.user._id : undefined
+    ctx.user = {
+      ...ctx.user!,
+      // override userID with metadata one
+      _id: userId,
+      userId,
+      globalId,
+      roleId,
+      role: await roles.getRole(roleId, { defaultPublic: true }),
+    }
+
+    return context.doInAppContext({ appId, user: ctx.user }, () => next())
   })
 }) as Middleware

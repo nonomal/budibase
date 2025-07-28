@@ -70,14 +70,6 @@ export interface UserCtx<
   loginMethod?: LoginMethod
 }
 
-/**
- * @deprecated: Use UserCtx / Ctx appropriately
- * Authenticated context.
- */
-export interface BBContext extends Ctx {
-  user?: ContextUser
-}
-
 export interface ContextEmitter {
   emitRow(values: {
     eventName: EventType.ROW_SAVE

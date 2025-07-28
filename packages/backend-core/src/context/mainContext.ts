@@ -17,6 +17,7 @@ import {
   App,
   Table,
   License,
+  ContextUser,
 } from "@budibase/types"
 import { ContextMap } from "./types"
 
@@ -206,8 +207,23 @@ export function getSelfHostCloudDB() {
 export async function doInAppContext<T>(
   appId: string,
   task: () => T
+): Promise<T>
+export async function doInAppContext<T>(
+  { appId, user }: { appId: string; user: ContextUser },
+  task: () => T
+): Promise<T>
+export async function doInAppContext<T>(
+  props: string | { appId: string; user: ContextUser },
+  task: () => T
 ): Promise<T> {
-  return _doInAppContext(appId, task)
+  if (typeof props === "string") {
+    return _doInAppContext(props, task)
+  } else {
+    const { appId, user } = props
+    return _doInAppContext(appId, task, {
+      user,
+    })
+  }
 }
 
 async function _doInAppContext<T>(
